@@ -1,98 +1,96 @@
-
-"""
-Snake–Water–Gun Game (Python)
-Rules:
-- snake drinks water  -> snake wins
-- water rusts gun     -> water wins
-- gun kills snake     -> gun wins
-"""
-
 import random
 
-CHOICES = {
-    "s": "snake",
-    "w": "water",
-    "g": "gun"
-}
+def print_header():
+    print("="*45)
+    print("           🐍 SNAKE WATER GUN 🔫💧")
+    print("="*45)
+    print("Rules:")
+    print("- Snake drinks Water (Snake wins)")
+    print("- Water rusts Gun  (Water wins)")
+    print("- Gun kills Snake  (Gun wins)")
+    print("="*45)
 
-
-OUTCOMES = {
-    ("snake", "water"): "win",
-    ("water", "gun"): "win",
-    ("gun", "snake"): "win",
-    ("water", "snake"): "lose",
-    ("gun", "water"): "lose",
-    ("snake", "gun"): "lose",
-}
-
-def normalize(choice: str) -> str:
-    c = choice.strip().lower()
-    if c in CHOICES:
-        return CHOICES[c]
-    if c in CHOICES.values():
-        return c
-    raise ValueError("Invalid choice. Use 's'/'snake', 'w'/'water', or 'g'/'gun'.")
-
-def decide_winner(player: str, computer: str) -> str:
-    if player == computer:
-        return "draw"
-    return OUTCOMES.get((player, computer), "lose") 
-
-def prompt_round(round_no: int) -> tuple[str, str, str]:
+def get_user_choice():
+    valid_inputs = {'s': 'snake', 'w': 'water', 'g': 'gun'}
     while True:
-        try:
-            raw = input(f"[Round {round_no}] Choose (s)nake, (w)ater, (g)un: ")
-            player = normalize(raw)
-            break
-        except ValueError as e:
-            print(e)
-    computer = random.choice(list(CHOICES.values()))
-    result = decide_winner(player, computer)
-    return player, computer, result
-
-def play_best_of(total_rounds: int) -> None:
-    player_score = 0
-    computer_score = 0
-
-    for r in range(1, total_rounds + 1):
-        player, computer, result = prompt_round(r)
-        if result == "win":
-            player_score += 1
-            msg = "You win this round!"
-        elif result == "lose":
-            computer_score += 1
-            msg = "Computer wins this round."
+        choice = input("\nEnter your choice ([S]nake, [W]ater, [G]un): ").strip().lower()
+        
+        # Allow user to type the full word or just the first letter
+        if choice in valid_inputs:
+            return valid_inputs[choice]
+        elif choice in valid_inputs.values():
+            return choice
         else:
-            msg = "It's a draw."
-        print(f" You: {player} | Computer: {computer} -> {msg}")
-        print(f" Score: You {player_score} - {computer_score} Computer\n")
+            print("Invalid choice. Please try again.")
 
-    print("Final Result".center(30, "-"))
-    if player_score > computer_score:
-        print(f"You won the match! 🎉 ({player_score}-{computer_score})")
-    elif computer_score > player_score:
-        print(f"Computer won the match. ({computer_score}-{player_score})")
+def play_game():
+    print_header()
+
+    # Match the slider logic from the HTML (choosing number of rounds)
+    try:
+        total_rounds = int(input("\nHow many rounds do you want to play? (e.g., 3, 5, 11): "))
+    except ValueError:
+        print("Invalid input. Defaulting to 5 rounds.")
+        total_rounds = 5
+
+    user_score = 0
+    comp_score = 0
+    choices = ['snake', 'water', 'gun']
+    icons = {'snake': '🐍', 'water': '💧', 'gun': '🔫'}
+
+    # Game logic dicts directly mirroring your JS `OUTCOMES` and `RULES`
+    outcomes = {
+        ('snake', 'water'): 'win',  ('water', 'gun'): 'win',  ('gun', 'snake'): 'win',
+        ('water', 'snake'): 'lose', ('gun', 'water'): 'lose', ('snake', 'gun'): 'lose'
+    }
+
+    rules_text = {
+        ('snake', 'water'): 'Snake drinks water',
+        ('water', 'gun'): 'Water rusts gun',
+        ('gun', 'snake'): 'Gun kills snake',
+    }
+
+    # Main game loop
+    for round_num in range(1, total_rounds + 1):
+        print(f"\n--- Round {round_num} of {total_rounds} ---")
+        
+        user_choice = get_user_choice()
+        comp_choice = random.choice(choices)
+
+        print(f"\nYou chose:      {icons[user_choice]} {user_choice.capitalize()}")
+        print(f"Computer chose: {icons[comp_choice]} {comp_choice.capitalize()}")
+
+        # Determine winner
+        if user_choice == comp_choice:
+            print("Result: Same choice — it's a draw!")
+        else:
+            result = outcomes[(user_choice, comp_choice)]
+            
+            if result == 'win':
+                rule = rules_text.get((user_choice, comp_choice), "")
+                print(f"Result: {rule}. You win this round! ✅")
+                user_score += 1
+            else:
+                rule = rules_text.get((comp_choice, user_choice), "")
+                print(f"Result: {rule}. Computer wins this round. ❌")
+                comp_score += 1
+
+        print(f"Scoreboard -> You: {user_score} | Computer: {comp_score}")
+
+    # Final Match Banner
+    print("\n" + "="*45)
+    print("               FINAL RESULTS")
+    print("="*45)
+    print(f"Total Rounds Played: {total_rounds}")
+    print(f"Your Score: {user_score}")
+    print(f"Computer Score: {comp_score}\n")
+
+    if user_score > comp_score:
+        print("🏆 You won the match! 🎉")
+    elif comp_score > user_score:
+        print("💀 Computer won the match.")
     else:
-        print(f"It's a tie! ({player_score}-{computer_score})")
-
-def main():
-    print("=== Snake–Water–Gun ===")
-    print("Enter 's'/'snake', 'w'/'water', or 'g'/'gun'.")
-    while True:
-        try:
-            rounds = int(input("How many rounds? (odd number recommended): ").strip())
-            if rounds <= 0:
-                print("Please enter a positive integer.")
-                continue
-            break
-        except ValueError:
-            print("Please enter a valid integer.")
-
-    if rounds % 2 == 0:
-        print(f"Even number detected. Playing {rounds + 1} rounds to avoid ties.")
-        rounds += 1
-    play_best_of(rounds)
-    print("Thanks for playing!")
+        print("🤝 It's a tie match!")
 
 if __name__ == "__main__":
-    main()
+    play_game()
